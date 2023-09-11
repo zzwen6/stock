@@ -1,7 +1,10 @@
-package top.hting.stock.dto.xueqiu;
+package top.hting.stock.entity;
 
 import lombok.Data;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -10,7 +13,19 @@ import java.math.BigDecimal;
  * @date 2023/8/1 23:45
  */
 @Data
-public class Quote implements Serializable {
+@Entity
+@Table(name = "s_quote")
+public class QuoteEntity extends BaseEntity implements Serializable {
+
+    /**
+     * 主键：股票代码+yyyyMMdd
+     */
+
+    /**
+     * 股票日期
+     */
+    private Integer stockDate;
+
     private BigDecimal currentExt; // 扩展的当前值（如果有）
     private String symbol; // 股票代码
     private BigDecimal volumeExt; // 扩展的成交量（如果有）
@@ -74,4 +89,13 @@ public class Quote implements Serializable {
     private BigDecimal peTtm; // 市盈率（滚动12个月）
     private Long time; // 行情时间
     private BigDecimal open; // 当天开盘价
+
+    @Column(name = "delayed_flag")
+    public Integer getDelayed() {
+        return delayed;
+    }
+
+    public void setDelayed(Integer delayed) {
+        this.delayed = delayed;
+    }
 }
