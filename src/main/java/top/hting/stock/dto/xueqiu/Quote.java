@@ -31,7 +31,7 @@ public class Quote implements Serializable {
     private BigDecimal eps; // 每股收益
     private BigDecimal lastClose; // 上一个收盘价
     private BigDecimal profitFour; // 四年利润
-    private Integer volume; // 当前成交量
+    private Long volume; // 当前成交量
     private BigDecimal volumeRatio; // 成交量比率
     private BigDecimal profitForecast; // 预测利润
     private BigDecimal turnoverRate; // 换手率
