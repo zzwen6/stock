@@ -10,3 +10,6 @@ spring:
       ddl-auto: update
     database-platform: org.hibernate.dialect.MySQL8Dialect
 
+
+weixin:
+  webhook: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=5f814e7f-9475-4277-be47-849d0cd49b1c

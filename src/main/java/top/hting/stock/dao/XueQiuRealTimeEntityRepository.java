@@ -10,4 +10,5 @@ import top.hting.stock.entity.XueQiuRealTimeEntity;
  */
 @Repository
 public interface XueQiuRealTimeEntityRepository extends JpaRepository<XueQiuRealTimeEntity,String> {
+    XueQiuRealTimeEntity findFirstByCodeOrderByTimestampeDesc(String code);
 }

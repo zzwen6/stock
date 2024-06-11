@@ -8,8 +8,8 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: none
-
-
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
 xxl:
   job:
@@ -31,3 +31,5 @@ xxl:
       logretentiondays: 15
     # 执行器通讯TOKEN [选填]：非空时启用；
     accessToken: xxltoken
+server:
+  port: 8801

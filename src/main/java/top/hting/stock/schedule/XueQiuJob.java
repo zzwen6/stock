@@ -1,5 +1,6 @@
 package top.hting.stock.schedule;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.util.DateUtils;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.context.XxlJobHelper;
@@ -12,13 +13,14 @@ import top.hting.stock.api.XueQiuHeaderFeignApi;
 import top.hting.stock.config.XueQiuConstant;
 import top.hting.stock.dao.XueQiuEntityRepository;
 import top.hting.stock.dao.XueQiuRealTimeEntityRepository;
+import top.hting.stock.dao.XueQiuStockEntityRepository;
 import top.hting.stock.dto.xueqiu.Quote;
 import top.hting.stock.dto.xueqiu.XueQiuDetail;
 import top.hting.stock.dto.xueqiu.XueQiuResult;
 import top.hting.stock.entity.XueQiuEntity;
 import top.hting.stock.entity.XueQiuRealTimeEntity;
+import top.hting.stock.entity.XueQiuStockEntity;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -41,17 +43,46 @@ public class XueQiuJob {
     XueQiuEntityRepository xueQiuEntityRepository;
     @Autowired
     XueQiuRealTimeEntityRepository xueQiuRealTimeEntityRepository;
+    @Autowired
+    XueQiuStockEntityRepository xueQiuStockEntityRepository;
 
     /**
      * 拉取数据-每天一次，3点之后
      */
     @XxlJob("pullDataEveryDay")
     public ReturnT<String> pullData() {
-        String symbol = XxlJobHelper.getJobParam();
-        // String symbol = "SH601919";
         // 每次拉取请求头，防止失效
         this.pullHeader();
 
+        List<XueQiuStockEntity> list = xueQiuStockEntityRepository.findAll();
+        for (XueQiuStockEntity stock : list) {
+            String symbol = stock.getId();
+            this.getStockDataByDay(symbol);
+        }
+
+        return ReturnT.SUCCESS;
+    }
+
+
+    /**
+     * 每分钟拉取一次
+     * 分析
+     * @return
+     */
+    @XxlJob("pullDataRealTime")
+    public ReturnT<String> pullDataRealTime() {
+        // String symbol = "SH601919";
+        // 每次拉取请求头，防止失效
+        this.pullHeader();
+        List<XueQiuStockEntity> list = xueQiuStockEntityRepository.findAll();
+        for (XueQiuStockEntity stock : list) {
+            String symbol = stock.getId();
+            this.getStockRealTimeData(symbol);
+        }
+        return ReturnT.SUCCESS;
+    }
+
+    private void getStockDataByDay(String symbol) {
         XueQiuResult<XueQiuDetail> detailResult = xueQiuFeignApi.getDetail(symbol, "detail");
         Quote quote = detailResult.getData().getQuote();
 
@@ -63,7 +94,7 @@ public class XueQiuJob {
         XueQiuEntity db = xueQiuEntityRepository.findById(entity.getCode() + "-" + date).orElse(null);
         if (db == null) {
             entity.setId(entity.getCode() + "-" + date);
-            entity.setDates(date);
+            entity.setDates(Integer.parseInt(date));
             entity.setTimes(quote.getTime());
             entity.setName(quote.getName());
             entity.setTimestampe(quote.getTimestamp());
@@ -89,15 +120,9 @@ public class XueQiuJob {
             entity.setOpen(quote.getOpen());
             xueQiuEntityRepository.save(entity);
         }
-        return ReturnT.SUCCESS;
     }
 
-    // 每分钟拉取一次
-    public void pullDataRealTime(String symbol) {
-        // String symbol = "SH601919";
-        // 每次拉取请求头，防止失效
-        this.pullHeader();
-
+    private void getStockRealTimeData(String symbol) {
         XueQiuResult<XueQiuDetail> detailResult = xueQiuFeignApi.getDetail(symbol, "detail");
         Quote quote = detailResult.getData().getQuote();
 

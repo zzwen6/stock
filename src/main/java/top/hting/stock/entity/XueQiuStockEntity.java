@@ -11,7 +11,6 @@ import java.io.Serializable;
 /**
  * 雪球股票实体类，用于需要自动化拉取数据的配置
  * @author zzwen6
- * @date 2024/6/8 21:07
  */
 @NoArgsConstructor
 @Data
@@ -35,5 +34,29 @@ public class XueQiuStockEntity implements Serializable {
      */
     private String name;
 
+    /**
+     * 一天浮动
+     */
+    private Double dayPercent;
+
+    /**
+     * 三天
+     */
+    private Double threeDayPercent;
+
+    /**
+     * 五天
+     */
+    private Double fiveDayPercent;
+
+    /**
+     * 七天
+     */
+    private Double sevenDayPercent;
+
+    /**
+     * 10天
+     */
+    private Double tenDayPercent;
 
 }

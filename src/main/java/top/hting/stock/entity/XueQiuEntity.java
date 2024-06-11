@@ -23,7 +23,7 @@ public class XueQiuEntity implements Serializable {
     @Id
     private String id;
     private String code;
-    private String dates;
+    private Integer dates;
     private Long times;
     private String name;
     private Long timestampe; // 这两个时间还不知什么情况

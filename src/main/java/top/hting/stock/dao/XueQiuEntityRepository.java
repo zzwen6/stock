@@ -1,8 +1,11 @@
 package top.hting.stock.dao;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import top.hting.stock.entity.XueQiuEntity;
+
+import java.util.List;
 
 /**
  * @author zzwen6
@@ -10,4 +13,7 @@ import top.hting.stock.entity.XueQiuEntity;
  */
 @Repository
 public interface XueQiuEntityRepository extends JpaRepository<XueQiuEntity, String> {
+
+    List<XueQiuEntity> findBySymbolOrderByDatesDesc(String symbol, Pageable pageable);
+
 }
