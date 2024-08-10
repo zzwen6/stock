@@ -2,7 +2,6 @@ package top.hting.stock.entity;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.context.annotation.Primary;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -17,9 +16,9 @@ import java.math.BigDecimal;
  */
 @NoArgsConstructor
 @Data
-@Table(name = "xue_qiu_entity")
+@Table(name = "s_stock_day_data")
 @Entity
-public class XueQiuEntity implements Serializable {
+public class StockDayData implements Serializable {
     @Id
     private String id;
     private String code;

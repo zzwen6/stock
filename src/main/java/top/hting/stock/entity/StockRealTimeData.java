@@ -18,8 +18,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Data
 @Entity
-@Table(name = "xue_qiu_real_time_entity")
-public class XueQiuRealTimeEntity implements Serializable {
+@Table(name = "s_stock_real_time_data")
+public class StockRealTimeData implements Serializable {
     @Id
     private String id;
     private String code;

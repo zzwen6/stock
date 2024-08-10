@@ -1,9 +1,7 @@
 package top.hting.stock.schedule;
 
-import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson2.util.DateUtils;
 import com.xxl.job.core.biz.model.ReturnT;
-import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import feign.Response;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,15 +9,16 @@ import org.springframework.stereotype.Service;
 import top.hting.stock.api.XueQiuFeignApi;
 import top.hting.stock.api.XueQiuHeaderFeignApi;
 import top.hting.stock.config.XueQiuConstant;
-import top.hting.stock.dao.XueQiuEntityRepository;
-import top.hting.stock.dao.XueQiuRealTimeEntityRepository;
-import top.hting.stock.dao.XueQiuStockEntityRepository;
+import top.hting.stock.dao.StockDayDataRepository;
+import top.hting.stock.dao.StockRealTimeDataRepository;
+import top.hting.stock.dao.StockConfigRepository;
 import top.hting.stock.dto.xueqiu.Quote;
 import top.hting.stock.dto.xueqiu.XueQiuDetail;
 import top.hting.stock.dto.xueqiu.XueQiuResult;
-import top.hting.stock.entity.XueQiuEntity;
-import top.hting.stock.entity.XueQiuRealTimeEntity;
-import top.hting.stock.entity.XueQiuStockEntity;
+import top.hting.stock.dto.xueqiu.XueQiuStockList;
+import top.hting.stock.entity.StockDayData;
+import top.hting.stock.entity.StockRealTimeData;
+import top.hting.stock.entity.StockConfig;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +31,7 @@ import java.util.Map;
  * @date 2023/8/29 11:58
  */
 @Service
-public class XueQiuJob {
+public class XueQiuStockJob {
 
     @Autowired
     XueQiuHeaderFeignApi xueQiuHeaderFeignApi;
@@ -40,11 +39,11 @@ public class XueQiuJob {
     XueQiuFeignApi xueQiuFeignApi;
 
     @Autowired
-    XueQiuEntityRepository xueQiuEntityRepository;
+    StockDayDataRepository stockDayDataRepository;
     @Autowired
-    XueQiuRealTimeEntityRepository xueQiuRealTimeEntityRepository;
+    StockRealTimeDataRepository stockRealTimeDataRepository;
     @Autowired
-    XueQiuStockEntityRepository xueQiuStockEntityRepository;
+    StockConfigRepository stockConfigRepository;
 
     /**
      * 拉取数据-每天一次，3点之后
@@ -54,8 +53,8 @@ public class XueQiuJob {
         // 每次拉取请求头，防止失效
         this.pullHeader();
 
-        List<XueQiuStockEntity> list = xueQiuStockEntityRepository.findAll();
-        for (XueQiuStockEntity stock : list) {
+        List<StockConfig> list = stockConfigRepository.findAll();
+        for (StockConfig stock : list) {
             String symbol = stock.getId();
             this.getStockDataByDay(symbol);
         }
@@ -74,11 +73,46 @@ public class XueQiuJob {
         // String symbol = "SH601919";
         // 每次拉取请求头，防止失效
         this.pullHeader();
-        List<XueQiuStockEntity> list = xueQiuStockEntityRepository.findAll();
-        for (XueQiuStockEntity stock : list) {
+        List<StockConfig> list = stockConfigRepository.findAll();
+        for (StockConfig stock : list) {
             String symbol = stock.getId();
             this.getStockRealTimeData(symbol);
         }
+        return ReturnT.SUCCESS;
+    }
+
+    /**
+     * 每天拉取一次股票市场 沪股数据配置 不存在才写入
+     */
+    @XxlJob("pullStockConfig")
+    public ReturnT<String> pullStockConfig() {
+        // 每次拉取请求头，防止失效
+        this.pullHeader();
+
+        int page = 1;
+        Integer size = 90;
+        String order ="asc";
+        String orderBy = "market_capital"; // 按市值排序
+        String market = "CN";
+        String type = "sha";
+
+        XueQiuResult<XueQiuStockList> stockList = null;
+        do {
+            stockList = xueQiuFeignApi.getStockList(page, size, order, orderBy, market, type);
+            if (stockList.getData() != null) {
+                List<XueQiuStockList.XueQiuStock> list = stockList.getData().getList();
+                for (XueQiuStockList.XueQiuStock bean : list) {
+                    // 只有数据库不存在的情况下才写入
+                    StockConfig stockConfig = stockConfigRepository.findById(bean.getSymbol()).orElse(null);
+                    if (stockConfig == null) {
+                        stockConfig = new StockConfig(bean.getSymbol(), bean.getName());
+                        stockConfigRepository.save(stockConfig);
+                    }
+                }
+            }
+            // 下一页
+            page ++;
+        }while (stockList != null && stockList.getData() != null && stockList.getData().getList().size() > 0);
         return ReturnT.SUCCESS;
     }
 
@@ -86,12 +120,12 @@ public class XueQiuJob {
         XueQiuResult<XueQiuDetail> detailResult = xueQiuFeignApi.getDetail(symbol, "detail");
         Quote quote = detailResult.getData().getQuote();
 
-        XueQiuEntity entity = new XueQiuEntity();
+        StockDayData entity = new StockDayData();
         entity.setSymbol(symbol);
         entity.setCode(quote.getCode());
         String date = DateUtils.format(new Date(quote.getTime()), "yyyyMMdd");
 
-        XueQiuEntity db = xueQiuEntityRepository.findById(entity.getCode() + "-" + date).orElse(null);
+        StockDayData db = stockDayDataRepository.findById(entity.getCode() + "-" + date).orElse(null);
         if (db == null) {
             entity.setId(entity.getCode() + "-" + date);
             entity.setDates(Integer.parseInt(date));
@@ -118,7 +152,7 @@ public class XueQiuJob {
             entity.setProfit(quote.getProfit());
             entity.setStatus(quote.getStatus());
             entity.setOpen(quote.getOpen());
-            xueQiuEntityRepository.save(entity);
+            stockDayDataRepository.save(entity);
         }
     }
 
@@ -126,11 +160,11 @@ public class XueQiuJob {
         XueQiuResult<XueQiuDetail> detailResult = xueQiuFeignApi.getDetail(symbol, "detail");
         Quote quote = detailResult.getData().getQuote();
 
-        XueQiuRealTimeEntity entity = new XueQiuRealTimeEntity();
+        StockRealTimeData entity = new StockRealTimeData();
         entity.setCode(quote.getCode());
         entity.setTimestampe(quote.getTimestamp());
 
-        XueQiuRealTimeEntity db = xueQiuRealTimeEntityRepository.findById(entity.getCode() + "-" + entity.getTimestampe()).orElse(null);
+        StockRealTimeData db = stockRealTimeDataRepository.findById(entity.getCode() + "-" + entity.getTimestampe()).orElse(null);
         if (db == null) {
             entity.setId(entity.getCode() + "-" + entity.getTimestampe());
             entity.setTimes(quote.getTime());
@@ -143,7 +177,7 @@ public class XueQiuJob {
             entity.setHigh52w(quote.getHigh52w());
             entity.setLow52w(quote.getLow52w());
             entity.setOpen(quote.getOpen());
-            xueQiuRealTimeEntityRepository.save(entity);
+            stockRealTimeDataRepository.save(entity);
         }
     }
 

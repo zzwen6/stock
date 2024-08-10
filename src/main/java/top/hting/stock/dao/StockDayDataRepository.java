@@ -3,7 +3,7 @@ package top.hting.stock.dao;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import top.hting.stock.entity.XueQiuEntity;
+import top.hting.stock.entity.StockDayData;
 
 import java.util.List;
 
@@ -12,8 +12,8 @@ import java.util.List;
  * @date 2024/5/17 17:24
  */
 @Repository
-public interface XueQiuEntityRepository extends JpaRepository<XueQiuEntity, String> {
+public interface StockDayDataRepository extends JpaRepository<StockDayData, String> {
 
-    List<XueQiuEntity> findBySymbolOrderByDatesDesc(String symbol, Pageable pageable);
+    List<StockDayData> findBySymbolOrderByDatesDesc(String symbol, Pageable pageable);
 
 }

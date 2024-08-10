@@ -10,12 +10,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import top.hting.stock.dao.XueQiuEntityRepository;
-import top.hting.stock.dao.XueQiuRealTimeEntityRepository;
-import top.hting.stock.dao.XueQiuStockEntityRepository;
-import top.hting.stock.entity.XueQiuEntity;
-import top.hting.stock.entity.XueQiuRealTimeEntity;
-import top.hting.stock.entity.XueQiuStockEntity;
+import top.hting.stock.dao.StockDayDataRepository;
+import top.hting.stock.dao.StockRealTimeDataRepository;
+import top.hting.stock.dao.StockConfigRepository;
+import top.hting.stock.entity.StockDayData;
+import top.hting.stock.entity.StockRealTimeData;
+import top.hting.stock.entity.StockConfig;
 
 import java.util.List;
 
@@ -31,12 +31,12 @@ public class StockAnalysisService {
     private String robotWebhook;
 
     @Autowired
-    XueQiuEntityRepository xueQiuEntityRepository;
+    StockDayDataRepository stockDayDataRepository;
     @Autowired
-    XueQiuRealTimeEntityRepository xueQiuRealTimeEntityRepository;
+    StockRealTimeDataRepository stockRealTimeDataRepository;
     @Autowired
-    XueQiuStockEntityRepository xueQiuStockEntityRepository;
-    private static final Cache<String, Integer> CACHE = new TimedCache<>(3600000); // 一小时的缓存
+    StockConfigRepository xueQiuStockEntityRepository;
+    private static final Cache<String, Integer> CACHE = new TimedCache<>(1800000); // 一小时的缓存
 
     /**
      * 以天分析数据
@@ -48,10 +48,10 @@ public class StockAnalysisService {
     public void analyzeStockByDay() {
 
         Pageable pageable = PageRequest.of(0, 10);
-        List<XueQiuStockEntity> list = xueQiuStockEntityRepository.findAll();
-        for (XueQiuStockEntity stock : list) {
+        List<StockConfig> list = xueQiuStockEntityRepository.findAll();
+        for (StockConfig stock : list) {
             String symbol = stock.getId();
-            List<XueQiuEntity> details = xueQiuEntityRepository.findBySymbolOrderByDatesDesc(symbol, pageable);
+            List<StockDayData> details = stockDayDataRepository.findBySymbolOrderByDatesDesc(symbol, pageable);
             this.processByDay(details, stock);
         }
     }
@@ -64,9 +64,9 @@ public class StockAnalysisService {
      *
      */
     public void analyzeStockByRealTime() {
-        List<XueQiuStockEntity> list = xueQiuStockEntityRepository.findAll();
-        for (XueQiuStockEntity xueQiuStockEntity : list) {
-            XueQiuRealTimeEntity data = xueQiuRealTimeEntityRepository.findFirstByCodeOrderByTimestampeDesc(xueQiuStockEntity.getCode());
+        List<StockConfig> list = xueQiuStockEntityRepository.findAll();
+        for (StockConfig xueQiuStockEntity : list) {
+            StockRealTimeData data = stockRealTimeDataRepository.findFirstByCodeOrderByTimestampeDesc(xueQiuStockEntity.getCode());
             double v = data.getPercent().abs().doubleValue();
             if (v > xueQiuStockEntity.getDayPercent()) {
                 log.info("阈值触达通知: {}, {} ",xueQiuStockEntity.getCode(), data.getPercent() );
@@ -75,11 +75,11 @@ public class StockAnalysisService {
         }
     }
 
-    private void processByDay(List<XueQiuEntity> details, XueQiuStockEntity stock) {
+    private void processByDay(List<StockDayData> details, StockConfig stock) {
 
     }
 
-    private void send(String code, XueQiuRealTimeEntity data) {
+    private void send(String code, StockRealTimeData data) {
 
         Integer count = CACHE.get(code);
         if (count == null) {

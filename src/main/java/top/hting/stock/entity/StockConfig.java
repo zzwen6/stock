@@ -12,11 +12,10 @@ import java.io.Serializable;
  * 雪球股票实体类，用于需要自动化拉取数据的配置
  * @author zzwen6
  */
-@NoArgsConstructor
 @Data
-@Table(name = "xue_qiu_stock_entity")
+@Table(name = "s_stock_config")
 @Entity
-public class XueQiuStockEntity implements Serializable {
+public class StockConfig implements Serializable {
 
     /**
      * 带有沪/深标记的编码
@@ -59,4 +58,17 @@ public class XueQiuStockEntity implements Serializable {
      */
     private Double tenDayPercent;
 
+    public StockConfig(String id, String name) {
+        this.id = id;
+        this.name = name;
+        this.code = id.substring(2);
+        this.dayPercent = 3.0;
+        this.threeDayPercent = 7.0;
+        this.fiveDayPercent = 10.0;
+        this.sevenDayPercent = 12.0;
+        this.tenDayPercent = 20.0;
+    }
+
+    public StockConfig() {
+    }
 }
