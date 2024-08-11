@@ -1,7 +1,6 @@
 package top.hting.stock.schedule;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HtmlUtil;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import feign.Response;
@@ -11,7 +10,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import sun.nio.cs.ext.GBK;
 import top.hting.stock.api.ths.ThsFeignApi;
 import top.hting.stock.dao.StockCategoryRepository;
 import top.hting.stock.entity.StockCategory;
@@ -21,12 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author zzwen6
