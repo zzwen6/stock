@@ -6,8 +6,8 @@ import com.xxl.job.core.handler.annotation.XxlJob;
 import feign.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import top.hting.stock.api.XueQiuFeignApi;
-import top.hting.stock.api.XueQiuHeaderFeignApi;
+import top.hting.stock.api.xueqiu.XueQiuFeignApi;
+import top.hting.stock.api.xueqiu.XueQiuHeaderFeignApi;
 import top.hting.stock.config.XueQiuConstant;
 import top.hting.stock.dao.StockDayDataRepository;
 import top.hting.stock.dao.StockRealTimeDataRepository;
@@ -73,7 +73,7 @@ public class XueQiuStockJob {
         // String symbol = "SH601919";
         // 每次拉取请求头，防止失效
         this.pullHeader();
-        List<StockConfig> list = stockConfigRepository.findAll();
+        List<StockConfig> list = stockConfigRepository.findByRealDataSwitch(true);
         for (StockConfig stock : list) {
             String symbol = stock.getId();
             this.getStockRealTimeData(symbol);

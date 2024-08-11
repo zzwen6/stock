@@ -1,4 +1,4 @@
-package top.hting.stock.api;
+package top.hting.stock.api.xueqiu;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -34,6 +34,11 @@ public class StockConfig implements Serializable {
     private String name;
 
     /**
+     * 获取实时数据
+     */
+    private Boolean realDataSwitch;
+
+    /**
      * 一天浮动
      */
     private Double dayPercent;

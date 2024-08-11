@@ -1,4 +1,4 @@
-package top.hting.stock.api;
+package top.hting.stock.api.xueqiu;
 
 import feign.Response;
 import org.springframework.cloud.openfeign.FeignClient;
