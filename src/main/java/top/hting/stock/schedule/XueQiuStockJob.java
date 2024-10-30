@@ -1,10 +1,14 @@
 package top.hting.stock.schedule;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.util.DateUtils;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import feign.Response;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import top.hting.stock.api.xueqiu.XueQiuFeignApi;
 import top.hting.stock.api.xueqiu.XueQiuHeaderFeignApi;
@@ -31,6 +35,7 @@ import java.util.Map;
  * @date 2023/8/29 11:58
  */
 @Service
+@Slf4j
 public class XueQiuStockJob {
 
     @Autowired
@@ -44,7 +49,8 @@ public class XueQiuStockJob {
     StockRealTimeDataRepository stockRealTimeDataRepository;
     @Autowired
     StockConfigRepository stockConfigRepository;
-
+    @Value("${weixin.webhook}")
+    private String robotWebhook;
     /**
      * 拉取数据-每天一次，3点之后
      */
@@ -57,7 +63,9 @@ public class XueQiuStockJob {
         for (StockConfig stock : list) {
             String symbol = stock.getId();
             this.getStockDataByDay(symbol);
+            log.info("拉取: {}, {}", stock.getId(), stock.getName());
         }
+        this.send("每日数据拉取完成");
 
         return ReturnT.SUCCESS;
     }
@@ -94,7 +102,7 @@ public class XueQiuStockJob {
         String order ="asc";
         String orderBy = "market_capital"; // 按市值排序
         String market = "CN";
-        String type = "sha";
+        String type = "sh_sz";
 
         XueQiuResult<XueQiuStockList> stockList = null;
         do {
@@ -106,13 +114,18 @@ public class XueQiuStockJob {
                     StockConfig stockConfig = stockConfigRepository.findById(bean.getSymbol()).orElse(null);
                     if (stockConfig == null) {
                         stockConfig = new StockConfig(bean.getSymbol(), bean.getName());
-                        stockConfigRepository.save(stockConfig);
+                    }else {
+                        stockConfig.setName(bean.getName());
                     }
+                    stockConfigRepository.save(stockConfig);
                 }
             }
+            log.info("拉取成功, {}", page);
             // 下一页
             page ++;
         }while (stockList != null && stockList.getData() != null && stockList.getData().getList().size() > 0);
+        log.info("股票数据拉取完成, 总计 {} 页", page);
+        this.send("配置数据拉取完成");
         return ReturnT.SUCCESS;
     }
 
@@ -192,6 +205,19 @@ public class XueQiuStockJob {
             List<String> list = new ArrayList<>(collection);
             XueQiuConstant.HEADER_COOKIES = String.join(";", list);
         }
+    }
+
+    private void send(String content) {
+        String message = " {\n" +
+                "    \"msgtype\": \"markdown\",\n" +
+                "    \"markdown\": {\n" +
+                "        \"content\": \"通知 ${content} \" \n" +
+                "    }\n" +
+                "} ";
+
+        message = StrUtil.replace(message, "${content}", content);
+        // HttpUtil.post(robotWebhook, message);
+        HttpUtil.post("https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=5f814e7f-9475-4277-be47-849d0cd49b1c", message);
     }
 
 

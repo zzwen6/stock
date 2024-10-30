@@ -1,15 +1,6 @@
-spring:
-  datasource:
-    username: stock
-    password: stock
-#    url: jdbc:mysql://home.hting.top:53306/stock?Unicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
-    url: jdbc:mysql://192.168.1.4:3306/stock?Unicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-
-
 weixin:
   webhook: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=5f814e7f-9475-4277-be47-849d0cd49b1c
+
+spring:
+  profiles:
+    active: ${ENV}
