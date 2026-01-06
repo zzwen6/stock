@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableScheduling;
-// 增加点注释触发22
+// 增加点注释触发2222
 @SpringBootApplication
 @EnableFeignClients({"top.hting.stock.api"})
 @Slf4j
